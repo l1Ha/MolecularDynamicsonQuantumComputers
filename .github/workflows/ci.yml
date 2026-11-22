@@ -1,0 +1,16 @@
+name: CI
+on: [push, pull_request]
+jobs:
+  build-test:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install gfortran (macOS)
+        if: runner.os == 'macOS'
+        run: brew install gcc || true
+      - name: Build & Run Tests
+        run: bash tests/run_all_tests.sh

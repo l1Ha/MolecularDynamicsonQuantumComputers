@@ -1,0 +1,4 @@
+src/*.o
+src/*.mod
+src/libmdqc.a
+tests/test_quantum_hardware
