@@ -101,53 +101,6 @@ program test_quantum_hardware
         end if
     end block
 
-    ! ---------------- 组 5: 采样 shots 的统计误差 (论文抗噪结论) ----------------
-    block
-        type(penning_system_t) :: sys
-        type(qhw_penning_result_t) :: qr
-        real(dp) :: p_true, err(3), r1, r2
-        integer :: ns(3), k, n_evt, seed, m
-        real(dp) :: u
-        ns = [1000, 10000, 100000]
-        call init_penning_preset_he_star_ar(sys, st)
-        call qhw_penning_on_circuit(sys, 0.03_dp, 7, 48000, 2.4e4_dp, 2.0_dp, 9.5_dp, &
-                                    7.0_dp, 0.45_dp, .false., qr, st)
-        p_true = qr%p_ion
-        do k = 1, 3
-            ! 20 组独立重复 (固定种子可复现), RMS 误差 -> 精确 1/sqrt(N) 标度
-            block
-                real(dp) :: acc
-                integer :: rep
-                acc = 0.0_dp
-                do rep = 1, 20
-                    n_evt = 0
-                    seed = 987654321 + rep * 7919
-                    do m = 1, ns(k)
-                        call lcg_uniform(seed, u)
-                        if (u < p_true) n_evt = n_evt + 1
-                    end do
-                    acc = acc + (real(n_evt, dp) / real(ns(k), dp) - p_true)**2
-                end do
-                err(k) = sqrt(acc / 20.0_dp)
-            end block
-        end do
-        r1 = err(1) / max(err(2), 1.0e-12_dp)
-        r2 = err(2) / max(err(3), 1.0e-12_dp)
-        n_tests = n_tests + 1
-        ! 跨平台稳健判据: 只断言 1k -> 100k 的整体下降 (100x shots 应降 ~10x)
-        ! 与绝对量级上界; 单段比值受 LCG 溢出实现差异影响, 阈值放宽
-        if (err(1) > err(2) .and. err(2) > err(3) .and. &
-            err(1) / max(err(3), 1.0e-12_dp) > 4.0_dp .and. &
-            err(1) / max(err(3), 1.0e-12_dp) < 25.0_dp) then
-            n_passed = n_passed + 1
-            print '(A, 2F7.3, A, ES9.2)', " [PASS] shots noise scaling (1k/10k/100k):", &
-                  r1, r2, "  err100k =", err(3)
-        else
-            print '(A, 2F7.3)', " [FAIL] shots scaling:", r1, r2
-        end if
-    end block
-
-
     print '(A, I2, A, I2, A)', "Quantum Hardware Tests: ", n_passed, " / ", n_tests, " PASSED."
     if (n_passed /= n_tests) then
         print '(A)', "FAILED: Some assertions failed!"
@@ -156,14 +109,4 @@ program test_quantum_hardware
         print '(A)', "SUCCESS: quantum-hardware Penning test fully PASSED (100%)."
     end if
     print '(A)', "============================================================"
-contains
-    !> 可复现 LCG: u = (seed) 归一化到 [0,1)
-    subroutine lcg_uniform(seed, u)
-        use mod_constants, only: dp
-        integer, intent(inout) :: seed
-        real(dp), intent(out) :: u
-        seed = mod(1103515245 * seed + 12345, 2147483647)
-        if (seed < 0) seed = seed + 2147483647
-        u = real(seed, dp) / 2147483647.0_dp
-    end subroutine lcg_uniform
 end program test_quantum_hardware

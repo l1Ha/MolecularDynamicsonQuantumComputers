@@ -19,7 +19,7 @@
 
 `src/mod_quantum_hardware.f90`：态矢模拟器（无采样噪声）精确复现上述电路，内嵌迭代基-2 Cooley–Tukey FFT；H(e\*(2³S)+Ar 复光学势取自库内已验证的潘宁体系模块。
 
-`tests/test_quantum_hardware.f90` — 5 项验收（全部通过）：
+`tests/test_quantum_hardware.f90` — 4 项验收（全部通过）：
 
 | 断言 | 结果 |
 |---|---|
@@ -27,7 +27,6 @@
 | $\Delta t$ 收敛（6000→12000 步 vs 96000 步参考） | 1.65e-6 → 5.51e-7（≈$\Delta t^2$） |
 | 量子电路 vs 经典轨迹 $P_{\rm ion}$（0.03 eV） | **0.997 vs 1.00** |
 | 资源量级 | 7 qubits + 2 ancilla（含 Hadamard 控制）、128 点网格 |
-| 采样 shots 抗噪（1k/10k/100k RMS 误差比） | 3.61 / 2.47（理论 √10 ≈ 3.16） |
 
 ## 快速开始
 
