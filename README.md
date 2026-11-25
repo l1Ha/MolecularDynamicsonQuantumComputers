@@ -37,6 +37,8 @@ make test                       # 等价
 
 依赖：gfortran（≥9）、bash；无外部库。
 
+**GPU（OpenACC）**：`make gpu` 以 `-O3 -fopenacc` 构建同一份源码——势相位/动能相位/吸收振幅与 FFT 蝶形循环已加 `!$acc parallel loop` 指令；有加速器时卸载执行，无 GPU 时由运行时回退主机（本机验证两条构建路径验收均为 4/4 一致）。对当前 128 点小网格加速收益可忽略，指令化的价值在于 2D（NOCl）与更大网格上可零改动卸载；后续可接 NVHPC `-gpu=cuda` 或 CUDA Fortran 路径。
+
 ## 路线图
 
 - **光解离**：把同一电路用于 S0 振动本征态 → 排斥态传播 + CAP 膨胀 + Hadamard test 自相关 → $\sigma_{\rm tot}(E)$（复现论文 NOCl 基准）；

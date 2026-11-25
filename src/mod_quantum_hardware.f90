@@ -122,25 +122,33 @@ contains
         res%p_step_min = 1.0_dp
         do s = 1, max(n_steps, 1)
             ! 二阶分裂: e^{-iV dt/2} e^{-iT dt} e^{-iV dt/2}
+            !$acc parallel loop
             do i = 1, n
                 psi(i) = psi(i) * cmplx(cos(0.5_dp * v_au(i) * dt), &
                                        -sin(0.5_dp * v_au(i) * dt), kind=dp)
             end do
+            !$acc end parallel loop
             spec = psi
             call fft_complex(spec)
+            !$acc parallel loop
             do i = 1, n
                 spec(i) = spec(i) * cmplx(cos(kin(i) * dt), -sin(kin(i) * dt), kind=dp)
             end do
+            !$acc end parallel loop
             call fft_complex_inv(spec)
             psi = spec
+            !$acc parallel loop
             do i = 1, n
                 psi(i) = psi(i) * cmplx(cos(0.5_dp * v_au(i) * dt), &
                                        -sin(0.5_dp * v_au(i) * dt), kind=dp)
             end do
+            !$acc end parallel loop
             ! 膨胀 / 后选择
+            !$acc parallel loop
             do i = 1, n
                 psi(i) = psi(i) * amp(i)
             end do
+            !$acc end parallel loop
             nrm2 = real(sum(abs(psi)**2), dp)
             if (nrm2 > 1.0e-300_dp) then
                 p_step = nrm2
@@ -197,11 +205,13 @@ contains
             ang = -2.0_dp * PI / real(len, dp)
             do k = 0, half - 1
                 w = cmplx(cos(ang * real(k, dp)), sin(ang * real(k, dp)), kind=dp)
+                !$acc parallel loop
                 do i = k + 1, n, len
                     t = w * v(i + half)
                     v(i + half) = v(i) - t
                     v(i) = v(i) + t
                 end do
+                !$acc end parallel loop
             end do
             len = len * 2
         end do
